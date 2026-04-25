@@ -163,7 +163,7 @@ export default function NewNovelPage() {
         <>
           <h1 className="page-title mb-lg">New Novel — Chapter 1</h1>
           <p className="muted mb-md">
-            Your novel won't be visible publicly until you publish this chapter.
+            Your novel won&apos;t be visible publicly until you publish this chapter.
           </p>
           <form onSubmit={submitChapter}>
             <div className="form-group">
