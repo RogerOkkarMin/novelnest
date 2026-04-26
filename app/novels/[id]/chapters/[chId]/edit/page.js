@@ -14,9 +14,6 @@ export default function EditChapterPage() {
   const [error,   setError]   = useState('');
   const draftKey = `chapter_draft_${id}_${chId}`;
 
-  const wordCount = form.content.trim() === '' ? 0
-    : form.content.trim().split(/\s+/).filter(Boolean).length;
-
   useEffect(() => {
     if (user === undefined) return;
     const q = user ? `?userId=${user.id}&userRole=${user.role}` : '?userId=&userRole=';
@@ -59,7 +56,6 @@ export default function EditChapterPage() {
       <div className="form-group">
         <div className="word-count-row">
           <label className="label" style={{ margin: 0 }}>Content</label>
-          <span className="chapter-words">{wordCount.toLocaleString()} words</span>
         </div>
         <textarea className="textarea textarea-lg" value={form.content}
           onChange={e => setForm({ ...form, content: e.target.value })} />

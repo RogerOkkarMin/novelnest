@@ -13,9 +13,6 @@ export default function NewChapterPage() {
   const [error,  setError]  = useState('');
   const draftKey = `chapter_draft_${id}_new`;
 
-  const wordCount = form.content.trim() === '' ? 0
-    : form.content.trim().split(/\s+/).filter(Boolean).length;
-
   useEffect(() => {
     const saved = localStorage.getItem(draftKey);
     if (saved) setForm(JSON.parse(saved));
@@ -50,7 +47,6 @@ export default function NewChapterPage() {
       <div className="form-group">
         <div className="word-count-row">
           <label className="label" style={{ margin: 0 }}>Content</label>
-          <span className="chapter-words">{wordCount.toLocaleString()} words</span>
         </div>
         <textarea className="textarea textarea-lg" value={form.content}
           onChange={e => setForm({ ...form, content: e.target.value })} />

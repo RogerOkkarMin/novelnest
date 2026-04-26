@@ -11,8 +11,7 @@ export async function GET(req, { params }) {
     const [rows] = await pool.query(
       'SELECT * FROM chapters WHERE id = ? AND novel_id = ?', [chId, id]
     );
-    if (!rows.length)
-      return NextResponse.json({ message: 'Chapter not found' }, { status: 404 });
+    if (!rows.length) return NextResponse.json({ message: 'Chapter not found' }, { status: 404 });
     const ch = rows[0];
     const [novel] = await pool.query('SELECT user_id FROM novels WHERE id = ?', [id]);
     const isOwner = userRole === 'admin' || (userId && parseInt(userId) === novel[0]?.user_id);
@@ -20,7 +19,6 @@ export async function GET(req, { params }) {
       return NextResponse.json({ message: 'This chapter is not published yet.' }, { status: 403 });
     return NextResponse.json(ch);
   } catch (e) {
-    console.error(e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -33,15 +31,13 @@ export async function PUT(req, { params }) {
     const [novel] = await pool.query('SELECT user_id FROM novels WHERE id = ?', [id]);
     if (userRole !== 'admin' && novel[0]?.user_id !== userId)
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    const word_count = content.trim().split(/\s+/).filter(Boolean).length;
     await pool.query(
-      'UPDATE chapters SET title=?, content=?, word_count=?, status=? WHERE id=?',
-      [title, content, word_count, status, chId]
+      'UPDATE chapters SET title=?, content=?, status=? WHERE id=?',
+      [title, content, status, chId]
     );
     const [rows] = await pool.query('SELECT * FROM chapters WHERE id = ?', [chId]);
     return NextResponse.json(rows[0]);
   } catch (e) {
-    console.error(e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
@@ -57,7 +53,6 @@ export async function DELETE(req, { params }) {
     await pool.query('DELETE FROM chapters WHERE id = ?', [chId]);
     return NextResponse.json({ ok: true });
   } catch (e) {
-    console.error(e);
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }

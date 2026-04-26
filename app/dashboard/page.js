@@ -144,7 +144,6 @@ export default function DashboardPage() {
                         {ch.status === 'draft' && (
                           <span className="chapter-draft-tag">Draft</span>
                         )}
-                        <span className="chapter-words">{(ch.word_count || 0).toLocaleString()} words</span>
                       </div>
                       <div className="dash-chapter-actions">
                         <Link

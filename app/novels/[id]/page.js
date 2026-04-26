@@ -119,7 +119,6 @@ export default function NovelPage() {
             <Link href={`/novels/${id}/chapters/${ch.id}`} className="chapter-link">{ch.title}</Link>
             {ch.status === 'draft' && <span className="chapter-draft-tag">Draft</span>}
           </div>
-          <span className="chapter-words">{ch.word_count.toLocaleString()} words</span>
         </div>
       ))}
 
