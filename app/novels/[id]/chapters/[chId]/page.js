@@ -57,7 +57,6 @@ export default function ChapterPage() {
       <div className="chapter-header">
         <p className="chapter-num-label">Chapter {chapter.chapter_number}</p>
         <h1 className="chapter-title-lg">{chapter.title}</h1>
-        <p className="chapter-meta">{chapter.word_count.toLocaleString()} words</p>
       </div>
 
       <div className="chapter-content">{chapter.content}</div>
