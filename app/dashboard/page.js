@@ -4,17 +4,19 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
-const statusBadge = s => ({
-  ongoing: 'badge-ongoing', completed: 'badge-completed',
-  hiatus: 'badge-hiatus', draft: 'badge-draft',
-}[s] || 'badge-genre');
+const statusStyle = {
+  ongoing:   { background: 'rgba(34,197,94,0.12)',  color: '#4ade80' },
+  completed: { background: 'rgba(96,165,250,0.12)', color: '#60a5fa' },
+  hiatus:    { background: 'rgba(245,158,11,0.12)', color: '#f59e0b' },
+  draft:     { background: 'rgba(100,100,100,0.2)', color: 'var(--text3)' },
+};
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const router   = useRouter();
   const [novels,   setNovels]   = useState([]);
-  const [expanded, setExpanded] = useState({}); // novelId -> bool, show chapters
-  const [chapters, setChapters] = useState({}); // novelId -> chapter[]
+  const [expanded, setExpanded] = useState({});
+  const [chapters, setChapters] = useState({});
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
@@ -26,17 +28,15 @@ export default function DashboardPage() {
   }, [user]);
 
   async function toggleChapters(novelId) {
-    const isOpen = expanded[novelId];
-    if (isOpen) {
+    if (expanded[novelId]) {
       setExpanded(prev => ({ ...prev, [novelId]: false }));
       return;
     }
-    // Fetch chapters if not already loaded
     if (!chapters[novelId]) {
-      const q = `?userId=${user.id}&userRole=${user.role}`;
+      const q   = `?userId=${user.id}&userRole=${user.role}`;
       const res = await fetch(`/api/novels/${novelId}/chapters${q}`);
-      const data = await res.json();
-      setChapters(prev => ({ ...prev, [novelId]: Array.isArray(data) ? data : [] }));
+      const d   = await res.json();
+      setChapters(prev => ({ ...prev, [novelId]: Array.isArray(d) ? d : [] }));
     }
     setExpanded(prev => ({ ...prev, [novelId]: true }));
   }
@@ -48,7 +48,7 @@ export default function DashboardPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id, userRole: user.role }),
     });
-    setNovels(novels.filter(n => n.id !== id));
+    setNovels(prev => prev.filter(n => n.id !== id));
   }
 
   async function deleteChapter(novelId, chapterId) {
@@ -63,99 +63,137 @@ export default function DashboardPage() {
       [novelId]: prev[novelId].filter(c => c.id !== chapterId),
     }));
     setNovels(prev => prev.map(n =>
-      n.id === novelId ? { ...n, chapter_count: (n.chapter_count || 1) - 1 } : n
+      n.id === novelId ? { ...n, chapter_count: Math.max((n.chapter_count || 1) - 1, 0) } : n
     ));
   }
 
-  if (!user || loading) return <div className="container"><p className="muted">Loading...</p></div>;
+  if (!user || loading) {
+    return (
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '36px 20px' }}>
+        <p style={{ color: 'var(--text2)' }}>Loading...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container">
-      <div className="dashboard-header">
+    <div style={{ maxWidth: 960, margin: '0 auto', padding: '36px 20px' }}>
+
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h1 className="dashboard-title">
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
             {user.role === 'admin' ? 'All Novels (Admin)' : 'My Novels'}
           </h1>
-          <p className="muted" style={{ marginTop: 4 }}>
-            {user.username} · {user.role}
-          </p>
+          <p style={{ fontSize: 13, color: 'var(--text3)' }}>{user.username} · {user.role}</p>
         </div>
         <Link href="/novels/new" className="btn btn-primary btn-sm">+ New Novel</Link>
       </div>
 
-      {novels.length === 0 ? (
-        <div className="dash-empty">
+      {/* Empty state */}
+      {novels.length === 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, padding: '60px 0', color: 'var(--text2)', fontSize: 15 }}>
           <span style={{ fontSize: 40 }}>📝</span>
           <p>No novels yet.</p>
           <Link href="/novels/new" className="btn btn-primary btn-sm">Write your first novel</Link>
         </div>
-      ) : novels.map(n => (
-        <div key={n.id} className="dash-novel-card">
+      )}
+
+      {/* Novel list */}
+      {novels.map(n => (
+        <div key={n.id} style={{ marginBottom: 12, border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden', background: 'var(--bg2)' }}>
+
           {/* Novel row */}
-          <div className="dash-novel-item">
-            <div className="dash-novel-left">
-              <img src={n.coverimage} alt={n.title} className="dash-novel-cover" />
-              <div>
-                <p className="dash-novel-title">{n.title}</p>
-                <div className="dash-novel-meta">
-                  <span className={`badge ${statusBadge(n.status)}`}>{n.status}</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 18px', flexWrap: 'wrap', gap: 12 }}>
+
+            {/* Left — cover + info */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+              <img
+                src={n.coverimage}
+                alt={n.title}
+                style={{ width: 44, height: 60, objectFit: 'cover', borderRadius: 6, flexShrink: 0 }}
+              />
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {n.title}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--text3)' }}>
+                  {statusStyle[n.status] && (
+                    <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 20, fontWeight: 500, ...statusStyle[n.status] }}>
+                      {n.status}
+                    </span>
+                  )}
                   <span>{n.chapter_count || 0} chapters</span>
                   <span>{n.views || 0} views</span>
                   {user.role === 'admin' && n.author_name && (
-                    <span style={{ color: 'var(--text3)' }}>by {n.author_name}</span>
+                    <span>by {n.author_name}</span>
                   )}
                 </div>
               </div>
             </div>
-            <div className="dash-novel-actions">
+
+            {/* Right — actions */}
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flexShrink: 0 }}>
               <button
                 className="btn btn-ghost btn-sm"
                 onClick={() => toggleChapters(n.id)}
               >
-                {expanded[n.id] ? 'Hide Chapters ▲' : 'Chapters ▼'}
+                {expanded[n.id] ? 'Hide ▲' : 'Chapters ▼'}
               </button>
-              <Link href={`/novels/${n.id}/edit`}    className="btn btn-outline btn-sm">Edit Cover</Link>
+              <Link href={`/novels/${n.id}/edit`} className="btn btn-outline btn-sm">Edit</Link>
               <button onClick={() => deleteNovel(n.id)} className="btn btn-danger btn-sm">Delete</button>
             </div>
           </div>
 
           {/* Chapter panel */}
           {expanded[n.id] && (
-            <div className="dash-chapter-panel">
-              <div className="dash-chapter-panel-header">
-                <p className="dash-chapter-panel-title">Chapters</p>
-                <Link
-                  href={`/novels/${n.id}/chapters/new`}
-                  className="btn btn-primary btn-sm"
-                >
+            <div style={{ borderTop: '1px solid var(--border)', padding: '16px 18px', background: 'var(--bg)' }}>
+
+              {/* Panel header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text2)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  Chapters
+                </p>
+                <Link href={`/novels/${n.id}/chapters/new`} className="btn btn-primary btn-sm">
                   + Add Chapter
                 </Link>
               </div>
 
+              {/* Chapter list */}
               {!chapters[n.id] || chapters[n.id].length === 0 ? (
-                <p className="dash-chapter-empty">No chapters yet.</p>
+                <p style={{ fontSize: 13, color: 'var(--text3)', padding: '8px 0' }}>No chapters yet.</p>
               ) : (
-                <div className="dash-chapter-list">
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {chapters[n.id].map(ch => (
-                    <div key={ch.id} className="dash-chapter-item">
-                      <div className="dash-chapter-left">
-                        <span className="chapter-num">Ch. {ch.chapter_number}</span>
-                        <span className="dash-chapter-title">{ch.title}</span>
+                    <div
+                      key={ch.id}
+                      style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '10px 14px', background: 'var(--bg2)',
+                        border: '1px solid var(--border)', borderRadius: 10,
+                        flexWrap: 'wrap', gap: 8,
+                      }}
+                    >
+                      {/* Chapter info */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 12, color: 'var(--text3)', minWidth: 36, flexShrink: 0 }}>
+                          Ch. {ch.chapter_number}
+                        </span>
+                        <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {ch.title}
+                        </span>
                         {ch.status === 'draft' && (
-                          <span className="chapter-draft-tag">Draft</span>
+                          <span style={{ fontSize: 10, padding: '2px 7px', borderRadius: 4, background: 'var(--bg3)', color: 'var(--text3)', border: '1px solid var(--border)', flexShrink: 0 }}>
+                            Draft
+                          </span>
                         )}
                       </div>
-                      <div className="dash-chapter-actions">
-                        <Link
-                          href={`/novels/${n.id}/chapters/${ch.id}`}
-                          className="btn btn-ghost btn-sm"
-                        >
+
+                      {/* Chapter actions */}
+                      <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                        <Link href={`/novels/${n.id}/chapters/${ch.id}`} className="btn btn-ghost btn-sm">
                           Read
                         </Link>
-                        <Link
-                          href={`/novels/${n.id}/chapters/${ch.id}/edit`}
-                          className="btn btn-outline btn-sm"
-                        >
+                        <Link href={`/novels/${n.id}/chapters/${ch.id}/edit`} className="btn btn-outline btn-sm">
                           Edit
                         </Link>
                         <button
