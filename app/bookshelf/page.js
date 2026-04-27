@@ -126,7 +126,6 @@ export default function BookshelfPage() {
               : `${total} novel${total !== 1 ? 's' : ''} saved across all shelves`}
           </p>
         </div>
-        <Link href="/novels" className="btn btn-outline btn-sm">Browse Novels</Link>
       </div>
 
       {SHELVES.map(s => {
