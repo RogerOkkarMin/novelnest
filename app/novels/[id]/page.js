@@ -132,9 +132,9 @@ export default function NovelPage() {
           <form onSubmit={submitReview}>
             <div className="star-row">
               {STARS.map(s => (
-                <button type="button" key={s} className="star-btn"
-                  onClick={() => setReviewForm({ ...reviewForm, rating: s })}
-                  style={{ color: s <= reviewForm.rating ? 'var(--gold)' : 'var(--border)' }}>★</button>
+                <button type="button" key={s} 
+  className={`star-btn ${s <= reviewForm.rating ? 'active' : ''}`}
+  onClick={() => setReviewForm({ ...reviewForm, rating: s })}>★</button>
               ))}
             </div>
             <textarea className="textarea mb-sm" placeholder="Write your thoughts... (optional)" rows={3}

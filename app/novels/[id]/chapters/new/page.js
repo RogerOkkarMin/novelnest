@@ -52,7 +52,7 @@ export default function NewChapterPage() {
           onChange={e => setForm({ ...form, content: e.target.value })} />
       </div>
       {error && <p className="error-text mb-md">{error}</p>}
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div className="btn-group">
         <button disabled={saving} className="btn btn-ghost btn-full" onClick={() => submit('draft')}>Save Draft</button>
         <button disabled={saving} className="btn btn-primary btn-full" onClick={() => submit('published')}>
           {saving ? 'Publishing...' : 'Publish Chapter'}
